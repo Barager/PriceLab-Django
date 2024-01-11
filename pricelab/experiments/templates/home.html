@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div>
+    {% for experiment in experiments %}
+        <div class="experimentname">
+            <a href="{% url 'experiment_detail' experiment.id %}">
+                <h3>{{ experiment.name|capfirst }}</h3>
+            </a>
+            <p>Owner: {{ experiment.owner }}</p>
+            {% if experiment.business_sponsor %}
+                <p>Business Sponsor: {{ experiment.business_sponsor }}</p>
+            {% endif %}
+            <p class="hidden">{{ experiment.description }}</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

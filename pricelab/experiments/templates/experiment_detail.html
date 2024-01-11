@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div>
+    <h3>{{ experiment.name|capfirst}}</h3>
+    <p>{{ experiment.description }}</p>
+    <p>Owner: {{ experiment.owner }}</p>
+    {% if experiment.business_sponsor %}
+        <p>Business Sponsor: {{ experiment.business_sponsor }}</p>
+    {% endif %}
+    <p>Start Date: {{ experiment.start_date|date:"Y M d" }}</p>
+    <p>Duration (days):{{ experiment.duration_days }}</p>
+</div>
+{% endblock %}
