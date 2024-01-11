@@ -1,16 +1,32 @@
 {% extends "base.html" %}
 {% block content %}
-<div>
+<div class="container">
+    <h2 class="title">All Experiments:</h2>
     {% for experiment in experiments %}
-        <div class="experimentname">
-            <a href="{% url 'experiment_detail' experiment.id %}">
-                <h3>{{ experiment.name|capfirst }}</h3>
-            </a>
-            <p>Owner: {{ experiment.owner }}</p>
-            {% if experiment.business_sponsor %}
-                <p>Business Sponsor: {{ experiment.business_sponsor }}</p>
-            {% endif %}
-            <p class="hidden">{{ experiment.description }}</p>
+        <div class="row mb-3 experiment-card">
+            <!-- Column 1: ID -->
+            <div class="col-md-2 d-flex align-items-center justify-content-center">
+                <p class="experiment-id">{{ experiment.id }}</p>
+            </div>
+            <!-- Column 2: Other information -->
+            <div class="col-md-7">
+                <div class="experimentname">
+                    <a href="{% url 'experiment_detail' experiment.id %}">
+                        <h3>{{ experiment.name|capfirst }}</h3>
+                    </a>
+                    <p>Owner: {{ experiment.owner }}</p>
+                    {% if experiment.business_sponsor %}
+                        <p>Business Sponsor: {{ experiment.business_sponsor }}</p>
+                    {% endif %}
+                    <p class="hidden">{{ experiment.description }}</p>
+                </div>
+            </div>
+            <!-- Column 3: Yellow circle with 10% -->
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <div class="percentage-circle {{ experiment.calculated_color }}">
+                    <div class="percentage">{{ experiment.calculate_percentage }}%</div>
+                </div>
+            </div>
         </div>
     {% endfor %}
 </div>

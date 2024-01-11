@@ -5,6 +5,10 @@ from .models import Experiment
 
 def home(request):
     experiments = Experiment.objects.all()
+
+    for experiment in experiments:
+        experiment.calculated_color = experiment.calculate_color()
+
     return render(request, 'home.html', {
         'experiments': experiments,
     })
@@ -17,4 +21,6 @@ def experiment_detail(request, experiment_id):
     return render(request,'experiment_detail.html', {
         'experiment': experiment,
     })
+
+
 
