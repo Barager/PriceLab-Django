@@ -1,2 +1,2 @@
 # PriceLab-Django
-Django framework fro PriceLab web DSP
+Django framework for PriceLab web DSP
