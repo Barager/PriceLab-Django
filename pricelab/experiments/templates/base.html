@@ -1,56 +1,64 @@
 {% load static %}
+<!DOCTYPE html>
 <html lang="en-US">
-    <head>
-        <meta charset="UTF-8">
-        <title>Home - PriceLab</title>
-        <link rel="stylesheet" id="ample-style-css" href="{% static 'style.css' %}" type="text/css" media="all">
-    </head>
-    <body class="wide">
-        <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-
-        <!-- jQuery library -->
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
-
-        <!-- Popper JS -->
-        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-
-        <!-- Latest compiled JavaScript -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-        
-        <div id="page" class="hfeed site">
-            <header>
-                <div class="header">
-                    <div class="main-head-wrap inner-wrap clearfix">
-                        <div id="header-logo-image">
-                            <a href="/">
-                                <img src="/static/images/price_lab.jpg" alt="PriceLab Logo">
-                            </a>
-                        </div>
-                        <div id="header-text" class="">
-                            <h1 id="site-title">
-                                <a href="/" title="PriceLab" rel="home">PriceLab</a>
-                            </h1>
-                        </div>
+<head>
+    <meta charset="UTF-8">
+    <title>Home - PriceLab</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" media="all">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+</head>
+<body class="wide">
+    <div id="page" class="hfeed site">
+        <header id="masthead" class="site-header" role="banner">
+            <div class="header-inner-wrap container">
+                <div class="row align-items-center justify-content-between">
+                    <div id="header-logo-image" class="col-md-2">
+                        <a href="/" class="custom-logo-link" rel="home" aria-current="page">
+                            <img src="{% static 'images/price_lab.jpg' %}" class="custom-logo" alt="PriceLab Logo">
+                        </a>
                     </div>
-                </div>
-            </header>
-            <div class="main-wrapper">
-                <div class="single-page clearfix">
-                    <div class="inner-wrap">
-                        <div>
-                        {% block content %}
-                        {% endblock %}
-                        </div>
+                    <div id="site-navigation" class="main-navigation col-md-6">
+                        <ul class="navigation-menu list-unstyled d-flex justify-content-center">
+                            <li class="nav-item"><a href="/overview" class="nav-link">Overview</a></li>
+                            <li class="nav-item"><a href="/dashboard" class="nav-link">Dashboard</a></li>
+                            <li class="nav-item"><a href="/knowledge-base" class="nav-link">Knowledge Base</a></li>
+                            <li class="nav-item"><a href="/support-help" class="nav-link">Support/Help</a></li>
+                        </ul>
+                    </div>
+                    <div class="header-icons col-md-2 d-flex justify-content-end">
+                        <a href="/search" class="icon-link"><i class="fas fa-search" aria-hidden="true"></i></a>
+                        <a href="/profile" class="icon-link"><i class="fas fa-user" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
-            <footer id="colophon">
+        </header>
+        <div class="main-wrapper">
+            <div class="single-page clearfix">
                 <div class="inner-wrap">
-                    Footer text for PriceLab site
+                    {% block content %}
+                    <!-- Content goes here -->
+                    {% endblock %}
                 </div>
-            </footer>
+            </div>
         </div>
-        <script src="{% static 'main.js' %}"></script>
-    </body>
+        <footer id="colophon" class="site-footer">
+            <div class="inner-wrap">
+                Footer text for PriceLab site
+            </div>
+        </footer>
+    </div>
+
+    <!-- jQuery library -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+    <!-- Popper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{% static 'main.js' %}"></script>
+</body>
 </html>
