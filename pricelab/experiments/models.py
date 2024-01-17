@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+import random
 
 class Experiment(models.Model):
     CRITERIA_AND_FILTER_CHOICES = [('location','Location'), ('age', 'Age'), ('avg_minutes_per_ride', 'Minutes Per Ride')]
@@ -40,8 +41,20 @@ class Experiment(models.Model):
         elif percentage == 100:
             return 'grey'
         else:
-            return 'green'
+            return 'green' 
         
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        treatment_group_ratio = self.treatment_group_ratio
+        users = User.objects.all()
+        user_ids = [user.id for user in users]
+        random.shuffle(user_ids)
+        num_users = len(user_ids)
+        num_treatment_group = int(num_users * treatment_group_ratio / 100)
+        self.treatment_group.set(user_ids[:num_treatment_group])
+        self.control_group.set(user_ids[num_treatment_group:])
+    
+    
 class User(models.Model):
     user_id = models.CharField(max_length=255)
     location = models.CharField(max_length=255)

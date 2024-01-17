@@ -1,10 +1,11 @@
 from django.contrib import admin
 from django.urls import path
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django import forms
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import Experiment
 from .models import User
@@ -14,7 +15,34 @@ class CsvImportForm(forms.Form):
 
 @admin.register(Experiment)
 class ExperimentAdmin(admin.ModelAdmin):
-    list_display = ['name', 'description', 'owner', 'business_sponsor', 'start_date', 'duration_days','criteria_field', 'criteria', 'filter_field', 'filter', 'treatment_group_ratio']
+    def save_model(self, request, obj, form, change):
+        obj.save()
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<path:object_id>/calculate-groups/',
+                self.admin_site.admin_view(self.calculate_groups),
+                name='calculate-groups',
+            ),
+        ]
+        return custom_urls + urls
+
+    def calculate_groups(self, request, object_id):
+        experiment = self.get_object(request, object_id)
+        experiment.save()
+        url = reverse('admin:experiments_experiment_change', args=[experiment.id])
+        return redirect(url)
+
+    def calculate_groups_button(self, obj):
+        url = reverse('admin:calculate-groups', args=[obj.id])
+        return format_html('<a class="button" href="{}">Segment Users</a>', url)
+
+    calculate_groups_button.short_description = 'Calculate Groups'
+
+    list_display = ('id', 'name', 'owner', 'treatment_group_ratio', 'calculate_groups_button')
+
 
 @admin.register(User)
 class UsersAdmin(admin.ModelAdmin):
