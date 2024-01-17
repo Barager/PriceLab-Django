@@ -44,4 +44,4 @@ class User(models.Model):
     user_id = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     age = models.IntegerField()
-    avg_minutes_per_ride = models.DecimalField(max_digits=4,decimal_places=3)
+    avg_minutes_per_ride = models.DecimalField(max_digits=10,decimal_places=3)
