@@ -15,6 +15,8 @@ class Experiment(models.Model):
     filter_field = models.CharField(max_length=30, choices=CRITERIA_AND_FILTER_CHOICES, blank=True)
     filter = models.CharField(max_length=255, blank=True)
     treatment_group_ratio = models.PositiveIntegerField(default=50, help_text='Percentage of users to receive treatment')
+    treatment_group = models.ManyToManyField('User', related_name='treatment_group', blank=True)
+    control_group = models.ManyToManyField('User', related_name='control_group', blank=True)
 
     def calculate_percentage(self):
         current_date = timezone.now()
