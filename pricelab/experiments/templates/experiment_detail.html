@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<div>
-    <h3>{{ experiment.name|capfirst}}</h3>
-    <p>{{ experiment.description }}</p>
-    <p>Owner: {{ experiment.owner }}</p>
+<div class="container">
+    <h2 class="experiment-title">{{ experiment.name|capfirst }}</h2>
+    <p class="experiment-description">{{ experiment.description }}</p>
+    <p><strong>Owner:</strong> {{ experiment.owner }}</p>
     {% if experiment.business_sponsor %}
-        <p>Business Sponsor: {{ experiment.business_sponsor }}</p>
+        <p><strong>Business Sponsor:</strong> {{ experiment.business_sponsor }}</p>
     {% endif %}
-    <p>Start Date: {{ experiment.start_date|date:"Y M d" }}</p>
-    <p>Duration (days):{{ experiment.duration_days }}</p>
+    <p><strong>Start Date:</strong> {{ experiment.start_date|date:"Y M d" }}</p>
+    <p><strong>Duration (days):</strong> {{ experiment.duration_days }}</p>
+
+    <!-- Additional Information for Treatment and Control Groups -->
+    <div class="experiment-info">
+        <p><strong>Treatment Percentage:</strong> {{ experiment.treatment_group_ratio }}%</p>
+        <p><strong>Treatment Group:</strong> {{ treatment_group.count }} users</p>
+        <p><strong>Control Group:</strong> {{ control_group.count }} users</p>
+    </div>
 </div>
 {% endblock %}

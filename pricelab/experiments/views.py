@@ -16,9 +16,23 @@ def home(request):
 def experiment_detail(request, experiment_id):
     try:
         experiment = Experiment.objects.get(id=experiment_id)
+        treatment_group = experiment.treatment_group.all()
+        control_group = experiment.control_group.all()
+    except Experiment.DoesNotExist:
+        raise Http404('Experiment not found')
+
+    return render(request, 'experiment_detail.html', {
+        'experiment': experiment,
+        'treatment_group': treatment_group,
+        'control_group': control_group,
+    })
+
+def dashboard(request, experiment_id):
+    try:
+        experiment = Experiment.objects.get(id=experiment_id)
     except Experiment.DoesNotExist:
         raise Http404('experiment not found')
-    return render(request,'experiment_detail.html', {
+    return render(request, 'dashboard.html', {
         'experiment': experiment,
     })
 

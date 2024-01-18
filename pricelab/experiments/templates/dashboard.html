@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+<div class="container">
+    <div class="experiment-details">
+        <h2 class="experiment-title">{{ experiment.name|capfirst }}</h2>
+        <p class="experiment-description">{{ experiment.description }}</p>
+        <div class="experiment-meta">
+            <p><strong>Start Date:</strong> {{ experiment.start_date|date:"Y M d" }}</p>
+            <p><strong>Duration (days):</strong> {{ experiment.duration_days }}</p>
+        </div>
+    </div>
+    <div class="charts">
+        <!-- Chart 1 -->
+        <div class="chart">
+            <img src="{% static 'images/Avg_minutes_compare.jpeg' %}" alt="Chart 1">
+        </div>
+
+        <!-- Chart 2 -->
+        <div class="chart">
+            <img src="{% static 'images/cumulative_minutes_compare.jpeg' %}" alt="Chart 2">
+        </div>
+
+        <!-- Chart 3 -->
+        <div class="chart">
+            <img src="{% static 'images/minutes_distribution_control.jpeg' %}" alt="Chart 3">
+        </div>
+
+        <!-- Chart 4 -->
+        <div class="chart">
+            <img src="{% static 'images/minutes_distribution_treatment.jpeg' %}" alt="Chart 4">
+        </div>
+    </div>
+</div>
+{% endblock %}

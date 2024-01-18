@@ -356,6 +356,25 @@ dd {
     background-color: #8acf93; 
 }
 
+/*
+====> Show Result btn
+--------------------------------------------------------------*/
+
+
+.btn-custom {
+    font-size: 16px; 
+    color: #000000; 
+    border: none; 
+    background-color: transparent; 
+    text-decoration: none; 
+    transition: text-decoration 0.3s; 
+}
+
+.btn-custom:hover {
+    text-decoration: underline; 
+}
+
+
 
 /*
 ====> Experiment Other
@@ -413,3 +432,42 @@ dd {
 }
 
 
+/*
+====> Results Dashboard
+--------------------------------------------------------------*/
+
+.container {
+    margin: auto;
+}
+
+.experiment-details {
+    margin-bottom: 20px;
+}
+
+.experiment-title {
+    text-align: center; 
+}
+
+.charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.chart {
+    flex: 1 1 calc(50% - 20px);
+    max-width: calc(50% - 20px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #fff;
+    text-align: center;
+	margin-bottom: 20px;
+}
+
+.chart img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
