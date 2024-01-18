@@ -21,11 +21,14 @@
                     <p class="hidden">{{ experiment.description }}</p>
                 </div>
             </div>
-            <!-- Column 3: Yellow circle with 10% -->
-            <div class="col-md-3 d-flex align-items-center justify-content-center">
+            <!-- Column 3: Circle with % -->
+            <div class="col-md-3 d-flex align-items-center justify-content-between">
                 <div class="percentage-circle {{ experiment.calculated_color }}">
                     <div class="percentage">{{ experiment.calculate_percentage }}%</div>
                 </div>
+                {% if experiment.calculate_percentage == 100 %}
+                    <a href="{% url 'dashboard' experiment.id %}" class="btn btn-custom">Show Results</a>
+                {% endif %}
             </div>
         </div>
     {% endfor %}
