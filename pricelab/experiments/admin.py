@@ -6,6 +6,9 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils import timezone
+from datetime import datetime
+
 
 from .models import Experiment
 from .models import User
@@ -46,7 +49,7 @@ class ExperimentAdmin(admin.ModelAdmin):
 
 @admin.register(User)
 class UsersAdmin(admin.ModelAdmin):
-    list_display = ['user_id', 'location', 'age', 'avg_minutes_per_ride']
+    list_display = ['customer_uuid', 'location_title', 'timestamp_month', 'rides', 'revenue_excl_vat']
 
     def get_urls(self):
         urls = super().get_urls()
@@ -54,26 +57,45 @@ class UsersAdmin(admin.ModelAdmin):
         return new_urls + urls
     
     def upload_csv(self, request):
-
         if request.method == "POST":
             csv_file = request.FILES["csv_upload"]
 
             if not csv_file.name.endswith('.csv'):
-                messages.warning(request,'The wrong file type was uploaded')
+                messages.warning(request, 'The wrong file type was uploaded')
                 return HttpResponseRedirect(request.path_info)
-            
 
             file_data = csv_file.read().decode("utf-8")
             csv_data = file_data.split("\n")
 
-            for x in csv_data:
+            for x in csv_data[1:]:
                 fields = x.split(",")
-                created = User.objects.update_or_create(
-                    user_id = fields[0],
-                    location = fields[1],
-                    age = fields[2],
-                    avg_minutes_per_ride = fields[3],
-                )
+
+                if len(fields) >= 3:  # Ensure fields has at least 3 elements
+                    try:
+                        timestamp_month = timezone.make_aware(datetime.strptime(fields[2], "%Y-%m-%d"))
+                    except (IndexError, ValueError):
+                        print(f"Skipping line: {x}. Unable to parse timestamp.")
+                        continue
+
+                    rides_value = float(fields[3]) if len(fields) > 3 and fields[3] else 0.0
+
+                    if len(fields) >= 5:
+                        revenue_excl_vat = fields[4]
+                    else:
+                        revenue_excl_vat = 0.0
+
+                    created = User.objects.update_or_create(
+                        customer_uuid=fields[0],
+                        location_title=fields[1],
+                        timestamp_month=timestamp_month,
+                        rides=rides_value,
+                        revenue_excl_vat=revenue_excl_vat
+                    )
+                else:
+                    # Handle the case where the fields list doesn't have enough elements
+                    print(f"Skipping line: {x}. Insufficient fields.")
+
+                            
             url = reverse('admin:index')
             return HttpResponseRedirect(url)
 
@@ -81,5 +103,4 @@ class UsersAdmin(admin.ModelAdmin):
         data = {"form": form}
         return render(request, "admin/csv_upload.html", data)
     
-
 
