@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from datetime import datetime
 import random
 
 class Experiment(models.Model):
@@ -56,7 +57,9 @@ class Experiment(models.Model):
     
     
 class User(models.Model):
-    user_id = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
-    age = models.IntegerField()
-    avg_minutes_per_ride = models.DecimalField(max_digits=10,decimal_places=3)
+    customer_uuid = models.CharField(max_length=255)
+    location_title = models.CharField(max_length=255)
+    timestamp_month = models.DateTimeField(default=datetime(2015, 7, 2))
+    rides = models.FloatField(max_length=255)
+    revenue_excl_vat = models.FloatField(max_length=255)
+    
