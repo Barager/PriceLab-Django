@@ -402,7 +402,7 @@ dd {
 /* Specific selectors for the header background and icon spacing */
 #page .site-header,
 #masthead.header {
-	background-color: #C4DBB3; /* Green background for the header */
+	background-color: #004225; /* Green background for the header */
 }
 
 #page .site-header #site-title a {
@@ -423,14 +423,23 @@ dd {
 }
 
 .header {
-	background-color: #4CAF50 !important; /* Forces the green background */
+	background-color: #004225 !important; /* Forces the green background */
 }
 
 .header-icons a {
     margin-left: 15px !important; /* Forces the spacing between icons */
     margin-right: 15px !important;
+	color: #ffffff;
 }
 
+.navigation-menu a {
+    color: white;
+    text-decoration: none; /* Optional: Removes underlines from links */
+}
+
+.navigation-menu a:hover {
+    text-decoration: underline; /* Add underline on hover */
+}
 
 /*
 ====> Results Dashboard
