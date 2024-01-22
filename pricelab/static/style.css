@@ -402,7 +402,7 @@ dd {
 /* Specific selectors for the header background and icon spacing */
 #page .site-header,
 #masthead.header {
-	background-color: #C4DBB3; /* Green background for the header */
+	background-color: #115000; 
 }
 
 #page .site-header #site-title a {
@@ -423,7 +423,7 @@ dd {
 }
 
 .header {
-	background-color: #4CAF50 !important; /* Forces the green background */
+	background-color: #115000 !important; /* Forces the green background */
 }
 
 .header-icons a {
@@ -471,3 +471,6 @@ dd {
     border-radius: 4px;
     margin-bottom: 10px;
 }
+
+
+
