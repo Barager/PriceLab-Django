@@ -3,6 +3,10 @@ from django.utils import timezone
 from datetime import timedelta
 from datetime import datetime
 import random
+import pandas as pd
+import numpy as np  
+
+from sklearn.model_selection import StratifiedShuffleSplit
 
 class Experiment(models.Model):
     CRITERIA_AND_FILTER_CHOICES = [('location_title','Location'), ('revenue_excl_vat', 'Revenue'), ('rides', 'Minutes Per Ride')]
@@ -19,6 +23,7 @@ class Experiment(models.Model):
     treatment_group_ratio = models.PositiveIntegerField(default=50, help_text='Percentage of users to receive treatment')
     treatment_group = models.ManyToManyField('User', related_name='treatment_group', blank=True)
     control_group = models.ManyToManyField('User', related_name='control_group', blank=True)
+    experiment_ready = models.BooleanField(default=False)
 
     def calculate_percentage(self):
         current_date = timezone.now()
