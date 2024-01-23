@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import datetime
+import pandas as pd
 
 from scipy.stats import ttest_ind, shapiro, levene, mannwhitneyu
 
@@ -25,10 +26,29 @@ class ExperimentAdmin(admin.ModelAdmin):
         obj.save()
         
         
+    def upload_csv(self, request):
+        if request.method == "POST":
+            csv_file = request.FILES["csv_upload"]
+
+            if not csv_file.name.endswith('.csv'):
+                messages.warning(request, 'The wrong file type was uploaded')
+                return HttpResponseRedirect(request.path_info)
+
+            # Read CSV data into Pandas DataFrame
+            try:
+                df = pd.read_csv(csv_file)
+            except pd.errors.EmptyDataError:
+                messages.warning(request, 'The CSV file is empty')
+                return HttpResponseRedirect(request.path_info)
+            except pd.errors.ParserError:
+                messages.warning(request, 'Error parsing the CSV file')
+                return HttpResponseRedirect(request.path_info)
+        
+        
     def perform_test(self, request, object_id):
         experiment = self.get_object(request, object_id)
         
-        if experiment.experiment_ready:
+        if experiment.ready:
             treatment_group = experiment.treatment_group.all()
             control_group = experiment.control_group.all()
 
@@ -71,6 +91,8 @@ class ExperimentAdmin(admin.ModelAdmin):
             if alternative_test_performed:
                 print(f'Test results: {experiment.t_test_result}')
 
+        elif not experiment.uploaded:
+            messages.warning(request, 'Data files not uploaded yet.')
         else:
             messages.warning(request, 'Experiment not done yet.')
 
@@ -112,8 +134,9 @@ class ExperimentAdmin(admin.ModelAdmin):
     assign_treatment_button.short_description = 'Assign treatment(s)'
 
     list_display = (
-        'id', 'name', 'owner', 'treatment_group_ratio', 'experiment_ready', 'assign_treatment_button', 'test_button'
+        'id', 'name', 'owner', 'treatment_size', 'ready', 'assign_treatment_button', 'test_button'
     )
+    list_display_links = ('id', 'name', 'owner', 'treatment_size')
     
     
     
