@@ -62,7 +62,6 @@ class Experiment(models.Model):
         
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-<<<<<<< HEAD
         treatment_group_ratio = self.treatment_group_ratio
         criteria_field = self.criteria_field
         criteria = self.criteria
@@ -73,7 +72,6 @@ class Experiment(models.Model):
         num_treatment_group = int(num_users * treatment_group_ratio / 100)
         self.treatment_group.set(user_ids[:num_treatment_group])
         self.control_group.set(user_ids[num_treatment_group:])
-=======
         treatment_size = self.treatment_size
 
         users = User.objects.values('id', 'location_title', 'rides')
@@ -88,7 +86,6 @@ class Experiment(models.Model):
             self.treatment_group.set(treatment_ids)
             self.control_group.set(control_ids)
     
->>>>>>> 9a4841e (code for tests and cosmetic overhaul)
     
 class User(models.Model):
     customer_uuid = models.CharField(max_length=255)
