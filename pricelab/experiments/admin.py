@@ -26,23 +26,23 @@ class ExperimentAdmin(admin.ModelAdmin):
         obj.save()
         
         
-    def upload_csv(self, request):
-        if request.method == "POST":
-            csv_file = request.FILES["csv_upload"]
+    # def upload_csv(self, request):
+    #     if request.method == "POST":
+    #         csv_file = request.FILES["csv_upload"]
 
-            if not csv_file.name.endswith('.csv'):
-                messages.warning(request, 'The wrong file type was uploaded')
-                return HttpResponseRedirect(request.path_info)
+    #         if not csv_file.name.endswith('.csv'):
+    #             messages.warning(request, 'The wrong file type was uploaded')
+    #             return HttpResponseRedirect(request.path_info)
 
-            # Read CSV data into Pandas DataFrame
-            try:
-                df = pd.read_csv(csv_file)
-            except pd.errors.EmptyDataError:
-                messages.warning(request, 'The CSV file is empty')
-                return HttpResponseRedirect(request.path_info)
-            except pd.errors.ParserError:
-                messages.warning(request, 'Error parsing the CSV file')
-                return HttpResponseRedirect(request.path_info)
+    #         # Read CSV data into Pandas DataFrame
+    #         try:
+    #             df = pd.read_csv(csv_file)
+    #         except pd.errors.EmptyDataError:
+    #             messages.warning(request, 'The CSV file is empty')
+    #             return HttpResponseRedirect(request.path_info)
+    #         except pd.errors.ParserError:
+    #             messages.warning(request, 'Error parsing the CSV file')
+    #             return HttpResponseRedirect(request.path_info)
         
         
     def perform_test(self, request, object_id):

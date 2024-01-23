@@ -62,29 +62,32 @@ class Experiment(models.Model):
         
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        treatment_group_ratio = self.treatment_group_ratio
+        treatment_size = self.treatment_size
         criteria_field = self.criteria_field
         criteria = self.criteria
-        users = User.objects.filter(**{criteria_field: criteria})
-        user_ids = [user.id for user in users]
-        random.shuffle(user_ids)
-        num_users = len(user_ids)
-        num_treatment_group = int(num_users * treatment_group_ratio / 100)
-        self.treatment_group.set(user_ids[:num_treatment_group])
-        self.control_group.set(user_ids[num_treatment_group:])
-        treatment_size = self.treatment_size
+        
+        # Ensure that criteria_field and criteria are not empty
+        if criteria_field and criteria:
+            users = User.objects.filter(**{criteria_field: criteria})
+            user_ids = [user.id for user in users]
+            random.shuffle(user_ids)
+            num_users = len(user_ids)
+            num_treatment_group = int(num_users * treatment_size / 100)
+            self.treatment_group.set(user_ids[:num_treatment_group])
+            self.control_group.set(user_ids[num_treatment_group:])
+            treatment_size = self.treatment_size
 
-        users = User.objects.values('id', 'location_title', 'rides')
-        df = pd.DataFrame(users)
+            users = User.objects.values('id', 'location_title', 'rides')
+            df = pd.DataFrame(users)
 
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=(1 - treatment_size), random_state=42)
+            sss = StratifiedShuffleSplit(n_splits=1, test_size=(1 - treatment_size), random_state=42)
 
-        for train_idx, test_idx in sss.split(df, df[['location_title']]):
-            
-            treatment_ids = df.loc[train_idx, 'id'].tolist()
-            control_ids = df.loc[test_idx, 'id'].tolist()
-            self.treatment_group.set(treatment_ids)
-            self.control_group.set(control_ids)
+            for train_idx, test_idx in sss.split(df, df[['location_title']]):
+                
+                treatment_ids = df.loc[train_idx, 'id'].tolist()
+                control_ids = df.loc[test_idx, 'id'].tolist()
+                self.treatment_group.set(treatment_ids)
+                self.control_group.set(control_ids)
     
     
 class User(models.Model):
