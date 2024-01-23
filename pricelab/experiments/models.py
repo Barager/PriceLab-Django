@@ -20,10 +20,21 @@ class Experiment(models.Model):
     criteria = models.CharField(max_length=255, blank=True)
     filter_field = models.CharField(max_length=30, choices=CRITERIA_AND_FILTER_CHOICES, blank=True)
     filter = models.CharField(max_length=255, blank=True)
-    treatment_group_ratio = models.PositiveIntegerField(default=50, help_text='Percentage of users to receive treatment')
+    treatment_size = models.FloatField(default=.5, help_text='Percentage of users to receive treatment')
     treatment_group = models.ManyToManyField('User', related_name='treatment_group', blank=True)
     control_group = models.ManyToManyField('User', related_name='control_group', blank=True)
-    experiment_ready = models.BooleanField(default=False)
+    ready = models.BooleanField(default=False, help_text='Experiment ready for analysis')
+    uploaded = models.BooleanField(default=False, help_text='CSV uploaded')
+    
+    def ready_for_analysis(self):
+        if self.start_date + timedelta(days=self.duration_days) < timezone.now() & self.uploaded:
+            self.ready = True
+        else:
+            self.ready = False
+        return
+    
+    
+        
 
     def calculate_percentage(self):
         current_date = timezone.now()
@@ -45,12 +56,13 @@ class Experiment(models.Model):
         if percentage == 0:
             return 'yellow'
         elif percentage == 100:
-            return 'grey'
+            return 'green'
         else:
-            return 'green' 
+            return 'grey' 
         
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+<<<<<<< HEAD
         treatment_group_ratio = self.treatment_group_ratio
         criteria_field = self.criteria_field
         criteria = self.criteria
@@ -61,6 +73,22 @@ class Experiment(models.Model):
         num_treatment_group = int(num_users * treatment_group_ratio / 100)
         self.treatment_group.set(user_ids[:num_treatment_group])
         self.control_group.set(user_ids[num_treatment_group:])
+=======
+        treatment_size = self.treatment_size
+
+        users = User.objects.values('id', 'location_title', 'rides')
+        df = pd.DataFrame(users)
+
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=(1 - treatment_size), random_state=42)
+
+        for train_idx, test_idx in sss.split(df, df[['location_title']]):
+            
+            treatment_ids = df.loc[train_idx, 'id'].tolist()
+            control_ids = df.loc[test_idx, 'id'].tolist()
+            self.treatment_group.set(treatment_ids)
+            self.control_group.set(control_ids)
+    
+>>>>>>> 9a4841e (code for tests and cosmetic overhaul)
     
 class User(models.Model):
     customer_uuid = models.CharField(max_length=255)
