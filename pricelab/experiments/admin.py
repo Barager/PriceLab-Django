@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
+from decimal import Decimal 
 from django.utils import timezone
 from datetime import datetime
 import pandas as pd
@@ -137,12 +138,16 @@ class ExperimentAdmin(admin.ModelAdmin):
         'id', 'name', 'owner', 'treatment_size', 'ready', 'assign_treatment_button', 'test_button'
     )
     list_display_links = ('id', 'name', 'owner', 'treatment_size')
-    
-    
+
     
 @admin.register(User)
 class UsersAdmin(admin.ModelAdmin):
-    list_display = ['customer_uuid', 'location_title', 'timestamp_month', 'rides', 'revenue_excl_vat']
+    list_display = ['customer_uuid', 'first_action_month', 'location_title',
+ 'cluster_name', 'rfm',
+ 'rfm_title', 'timestamp_month', 'month_of_life',
+ 'rides', 'revenue_excl_vat',
+ 'clv']
+
 
     def get_urls(self):
         urls = super().get_urls()
@@ -163,30 +168,41 @@ class UsersAdmin(admin.ModelAdmin):
             for x in csv_data[1:]:
                 fields = x.split(",")
 
-                if len(fields) >= 3:  # Ensure fields has at least 3 elements
+                if len(fields) >= 11:  # Adjust the index based on the number of columns in your CSV
                     try:
-                        timestamp_month = timezone.make_aware(datetime.strptime(fields[2], "%Y-%m-%d"))
-                    except (IndexError, ValueError):
-                        print(f"Skipping line: {x}. Unable to parse timestamp.")
+                        timestamp_str = fields[6].strip()  # Assuming 'TIMESTAMP_MONTH' is at index 6
+                        timestamp_month = timezone.make_aware(datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")).date()
+                        first_action_month = timezone.make_aware(datetime.strptime(fields[1].strip(), "%Y-%m-%d %H:%M:%S.%f")).date()  # Assuming 'FIRST_ACTION_MONTH' is at index 1
+                    except (IndexError, ValueError) as e:
+                        print(f"Skipping line (unable to parse timestamp): {x}")
+                        print(f"Error details: {e}")
                         continue
 
-                    rides_value = float(fields[3]) if len(fields) > 3 and fields[3] else 0.0
+                    rides_value = float(fields[8].strip()) if fields[8].strip() else 0.0  # Assuming 'RIDES' is at index 8
+                    revenue_excl_vat = Decimal(fields[9].strip()) if fields[9].strip() else Decimal(0.0)  # Assuming 'REVENUE_EXCL_VAT' is at index 9
+                    cluster_name = fields[3].strip()  # Assuming 'CLUSTER_NAME' is at index 3
+                    rfm = Decimal(fields[4].strip()) if fields[4].strip() else Decimal(0.0)
+                    rfm_title = fields[5].strip()  # Assuming 'RFM_TITLE' is at index 5
 
-                    if len(fields) >= 5:
-                        revenue_excl_vat = fields[4]
-                    else:
-                        revenue_excl_vat = 0.0
-
-                    created = User.objects.update_or_create(
-                        customer_uuid=fields[0],
-                        location_title=fields[1],
+                    # Create a new User instance for each row in the CSV
+                    user_instance = User(
+                        customer_uuid=fields[0].strip(),
+                        location_title=fields[2].strip(),  # Assuming 'LOCATION_TITLE' is at index 2
+                        first_action_month=first_action_month,
                         timestamp_month=timestamp_month,
                         rides=rides_value,
-                        revenue_excl_vat=revenue_excl_vat
+                        revenue_excl_vat=revenue_excl_vat,
+                        cluster_name=cluster_name,
+                        rfm=rfm,
+                        rfm_title=rfm_title,
                     )
+
+                    # Save the instance to the database
+                    user_instance.save()
+                    print(f"User instance saved: {user_instance}")
                 else:
-                    # Handle the case where the fields list doesn't have enough elements
-                    print(f"Skipping line: {x}. Insufficient fields.")
+                    print(f"Skipping line (insufficient fields): {x}")
+
 
                             
             url = reverse('admin:index')

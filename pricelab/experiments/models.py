@@ -72,7 +72,7 @@ class Experiment(models.Model):
             user_ids = [user.id for user in users]
             random.shuffle(user_ids)
             num_users = len(user_ids)
-            num_treatment_group = int(num_users * treatment_size / 100)
+            num_treatment_group = int(num_users * treatment_size)
             self.treatment_group.set(user_ids[:num_treatment_group])
             self.control_group.set(user_ids[num_treatment_group:])
             treatment_size = self.treatment_size
@@ -93,7 +93,14 @@ class Experiment(models.Model):
 class User(models.Model):
     customer_uuid = models.CharField(max_length=255)
     location_title = models.CharField(max_length=255)
-    timestamp_month = models.DateTimeField(default=datetime(2015, 7, 2))
-    rides = models.FloatField(max_length=255)
-    revenue_excl_vat = models.FloatField(max_length=255)
+    first_action_month = models.DateField(default=datetime(2015, 7, 2))
+    timestamp_month = models.DateField(default=datetime(2015, 7, 2))
+    month_of_life = models.IntegerField(default=0)
+    rfm = models.FloatField(default=0.0)  
+    rfm_title = models.CharField(default='',max_length=255)
+    rides = models.FloatField(default=0)  
+    cluster_name = models.CharField(default='', max_length=255)
+    revenue_excl_vat = models.FloatField(default=0.0) 
+    clv = models.FloatField(default=0.0)
+    
     
