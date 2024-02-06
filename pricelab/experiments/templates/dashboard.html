@@ -1,35 +1,101 @@
 {% extends "base.html" %}
 {% block content %}
 {% load static %}
+
 <div class="container">
     <div class="experiment-details">
         <h2 class="experiment-title">{{ experiment.name|capfirst }}</h2>
-        <p class="experiment-description">{{ experiment.description }}</p>
+        
         <div class="experiment-meta">
+            <p><strong>Owner:</strong> {{ experiment.owner }}</p>
             <p><strong>Start Date:</strong> {{ experiment.start_date|date:"Y M d" }}</p>
             <p><strong>Duration (days):</strong> {{ experiment.duration_days }}</p>
+            {% comment %} <p><strong>Sample Size:</strong> {{ experiment.participants_count }}</p> {% endcomment %}
+            <p class="experiment-description"><strong>Experiment Description:</strong><br> {{ experiment.description }}</p>
         </div>
     </div>
-    <div class="charts">
-        <!-- Chart 1 -->
-        <div class="chart">
-            <img src="{% static 'images/Avg_minutes_compare.jpeg' %}" alt="Chart 1">
-        </div>
 
-        <!-- Chart 2 -->
-        <div class="chart">
-            <img src="{% static 'images/cumulative_minutes_compare.jpeg' %}" alt="Chart 2">
-        </div>
-
-        <!-- Chart 3 -->
-        <div class="chart">
-            <img src="{% static 'images/minutes_distribution_control.jpeg' %}" alt="Chart 3">
-        </div>
-
-        <!-- Chart 4 -->
-        <div class="chart">
-            <img src="{% static 'images/minutes_distribution_treatment.jpeg' %}" alt="Chart 4">
-        </div>
+    <!-- Display Test Results -->
+    <div class="module">
+        <h3>Test Results:</h3>
+        <ul>
+            {% for test, result in results.items %}
+                <li>{{ test }}:
+                    {% if test == 'Normality Test' or test == 'Homogeneity of Variances' %}
+                        <ul>
+                            {% for subtest, subresult in result.items %}
+                                <li>{{ subtest }}: {{ subresult }}</li>
+                            {% endfor %}
+                            <!-- Add conclusions based on p-values -->
+                        </ul>
+                    {% elif test == 'T-Test' or test == 'Mann-Whitney U Test' %}
+                        <ul>
+                            {% for subtest, subresult in result.items %}
+                                <li>{{ subtest }}: {{ subresult }}</li>
+                            {% endfor %}
+                            {% if not result.Result %}
+                                <li><b>Conclusion: The groups are not significantly different.</b></li>
+                            {% else %}
+                                <li><b>Conclusion: The groups are significantly different.</b></li>
+                            {% endif %}
+                        </ul>
+                    {% elif test == 'Average Treatment Effect' %}
+                        <ul>
+                            {% for subtest, subresult in result.items %}
+                                {% if subtest == 'Conclusion' %}
+                                    <li><b>{{ subtest }}:</b> {{ subresult }}</li>
+                                {% else %}
+                                    <li><b>{{ subtest }}:</b>
+                                        {% if subtest == 'Model Details' %}
+                                            <ul>
+                                                {% for key, value in subresult.items %}
+                                                    <li><b>{{ key }}:</b> {{ value }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            {{ subresult }}
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        {{ result }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
     </div>
+
+    <!-- Display Plot -->
+    <div class="module">
+        {% if plot_path %}
+        <div style="margin-bottom: 60px; text-align: center; margin-left: -100px;">
+            <img src="{% static plot_path %}" alt="Experiment Plot">
+        </div>
+    {% else %}
+        <p>No plot available.</p>
+    {% endif %}
+
+    {% if sum_plot %}
+        <div style="margin-bottom: 60px; text-align: center; margin-left: -100px;">
+            <img src="{% static sum_plot %}" alt="Experiment Plot">
+        </div>
+    {% else %}
+        <p>No plot available.</p>
+    {% endif %}\
+        {% if covariate_plot_paths %}
+        {% for covariate_plot_path in covariate_plot_paths %}
+            <div style="margin-bottom: 20px; text-align: center; margin-left: 80px;">
+                <img src="{% static covariate_plot_path %}" alt="Covariate Representation Plot">
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No covariate representation plot available.</p>
+    {% endif %}
+    </div>
+
+    <!-- Add other sections as needed -->
+
 </div>
 {% endblock %}

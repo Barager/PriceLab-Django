@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="module">
+    <h2>Segmentation Form</h2>
+    <form method="post" action="{% if experiment.id %}{% url 'admin:segmentation' experiment.id %}{% else %}{% url 'admin:experiments_experiment_changelist' %}{% endif %}" id="segmentation-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <input type="submit" value="Save" class="button-save">
+        <a class="button button-cancel" href="{% url 'admin:experiments_experiment_changelist' %}">Cancel</a>
+        <button type="button" id="assign-treatment-button" class="button">Assign Treatment</button>
+    </form>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Get the button and form elements
+    var assignTreatmentButton = document.getElementById("assign-treatment-button");
+    var segmentationForm = document.getElementById("segmentation-form");
+
+    // Attach a click event listener to the Assign Treatment button
+    assignTreatmentButton.addEventListener("click", function() {
+        // Read the treatment size ratio from the form
+        var treatmentSize = parseFloat(document.getElementById("id_treatment_size").value);
+        
+        // Simulate form submission using AJAX
+        var formData = new FormData(segmentationForm);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", segmentationForm.action, true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        // Define the callback function
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 400) {
+                // Update the form with the new HTML received from the server
+                var tempDiv = document.createElement("div");
+                tempDiv.innerHTML = xhr.responseText;
+                var newForm = tempDiv.querySelector("#segmentation-form");
+
+                if (newForm) {
+                    segmentationForm.parentNode.replaceChild(newForm, segmentationForm);
+                    segmentationForm = newForm;
+
+                    // Assign treatment and control groups based on the ratio
+                    var numUsers = parseInt(document.getElementById("id_treatment_group").options.length);
+                    var numTreatmentGroup = Math.round(numUsers * treatmentSize / 100);
+
+                    // Set the selected options based on the ratio
+                    for (var i = 0; i < numUsers; i++) {
+                        var isSelected = i < numTreatmentGroup;
+                        document.getElementById("id_treatment_group").options[i].selected = isSelected;
+                        document.getElementById("id_control_group").options[i].selected = !isSelected;
+                    }
+                }
+            }
+        };
+
+        // Send the form data
+        xhr.send(formData);
+    });
+});
+</script>
+{% endblock %}

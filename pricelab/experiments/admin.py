@@ -6,155 +6,198 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from decimal import Decimal 
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
-
-from scipy.stats import ttest_ind, shapiro, levene, mannwhitneyu
-
+import uuid
+from background_task import background
 
 
 from .models import Experiment
 from .models import User
+from .forms import MetaInfoForm, SegmentationForm, AnalysisForm
 
 class CsvImportForm(forms.Form):
     csv_upload = forms.FileField()
+    
+class AnalysisCsvImportForm(forms.Form):
+    csv_upload = forms.FileField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['csv_upload'].label = 'CSV Upload'
 
 @admin.register(Experiment)
 class ExperimentAdmin(admin.ModelAdmin):
+    form = MetaInfoForm
+    
     def save_model(self, request, obj, form, change):
         obj.save()
         
-        
-    # def upload_csv(self, request):
-    #     if request.method == "POST":
-    #         csv_file = request.FILES["csv_upload"]
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        form.instance.save()
 
-    #         if not csv_file.name.endswith('.csv'):
-    #             messages.warning(request, 'The wrong file type was uploaded')
-    #             return HttpResponseRedirect(request.path_info)
-
-    #         # Read CSV data into Pandas DataFrame
-    #         try:
-    #             df = pd.read_csv(csv_file)
-    #         except pd.errors.EmptyDataError:
-    #             messages.warning(request, 'The CSV file is empty')
-    #             return HttpResponseRedirect(request.path_info)
-    #         except pd.errors.ParserError:
-    #             messages.warning(request, 'Error parsing the CSV file')
-    #             return HttpResponseRedirect(request.path_info)
-        
-        
-    def perform_test(self, request, object_id):
+    
+    def analysis(self, request, object_id):
         experiment = self.get_object(request, object_id)
-        
-        if experiment.ready:
-            treatment_group = experiment.treatment_group.all()
-            control_group = experiment.control_group.all()
+        form = AnalysisForm(instance=experiment)
 
-            # Extract the relevant data for the t-test (modify this based on your actual data structure)
-            treatment_data = [user.revenue_excl_vat for user in treatment_group]
-            control_data = [user.revenue_excl_vat for user in control_group]
+        if request.method == 'POST':
+            form = AnalysisForm(request.POST, instance=experiment)
 
-            # Shapiro-Wilk test for normality
-            _, p_value_treatment = shapiro(treatment_data)
-            _, p_value_control = shapiro(control_data)
-
-            # Levene's test for homogeneity of variances
-            _, p_value_levene = levene(treatment_data, control_data)
-
-            alternative_test_performed = False
-
-            if p_value_treatment > 0.05 and p_value_control > 0.05 and p_value_levene > 0.05:
-                # Perform t-test assuming unequal variances
-                t_statistic, p_value = ttest_ind(treatment_data, control_data, equal_var=False)
-
-                # Save the results in a variable (modify this based on your requirements)
-                experiment.t_test_result = {'test': 't-test', 't_statistic': t_statistic, 'p_value': p_value}
+            if form.is_valid():
                 experiment.save()
+                
+                # Extract selected tests from the form
+                selected_tests = form.cleaned_data.get('selected_tests', [])
+                
+                # Continue with the form processing as before
+                form.save()
+                
+                
+                messages.success(request, 'Analysis details updated successfully.')
 
-                messages.success(request, 'T-test performed successfully.')
-            else:
-                alternative_test_performed = True
+                print("Form saved successfully.")
+                print("Redirecting to changelist.")
 
-                # Check for alternative tests (e.g., Mann-Whitney U test for non-parametric data)
-                if p_value_treatment <= 0.05 or p_value_control <= 0.05:
-                    # Perform Mann-Whitney U test as an alternative
-                    _, mannwhitney_p_value = mannwhitneyu(treatment_data, control_data)
-                    experiment.t_test_result = {'test': 'Mann-Whitney U test', 'p_value': mannwhitney_p_value}
-                    messages.warning(request, 'Assumptions for t-test not met. Performed Mann-Whitney U test.')
-                else:
-                    # If neither t-test nor Mann-Whitney U test is appropriate, add more alternative tests as needed
-                    experiment.t_test_result = {'test': 'Alternative test', 'message': 'Additional alternative test needed.'}
-                    messages.warning(request, 'Assumptions for t-test not met. Additional alternative test needed.')
+                return redirect(reverse('admin:experiments_experiment_changelist'))
 
-            if alternative_test_performed:
-                print(f'Test results: {experiment.t_test_result}')
+        return render(
+            request,
+            'admin/experiments/experiment/analysis_form.html',
+            {'form': form, 'experiment': experiment},
+        )
 
-        elif not experiment.uploaded:
-            messages.warning(request, 'Data files not uploaded yet.')
-        else:
-            messages.warning(request, 'Experiment not done yet.')
-
-        url = reverse('admin:experiments_experiment_changelist')#, args=[experiment.id])
-        return redirect(url)
-
-    def test_button(self, obj):
-        url = reverse('admin:perform-test', args=[obj.id])
-        return format_html('<a class="button" href="{}">Perform Test</a>', url)
-
-    test_button.short_description = 'Test'
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path(
-                '<path:object_id>/assign-treatment/',
-                self.admin_site.admin_view(self.assign_treatment),
-                name='assign-treatment',
+                '<path:object_id>/segmentation/',
+                self.admin_site.admin_view(self.segmentation),
+                name='segmentation',
             ),
             path(
-                '<path:object_id>/perform-test/',
-                self.admin_site.admin_view(self.perform_test),
-                name='perform-test',
+                '<path:object_id>/analysis/',
+                self.admin_site.admin_view(self.analysis),
+                name='analysis',
             ),
+            path(
+                '<path:object_id>/segmentation/',
+                self.admin_site.admin_view(self.segmentation),
+                name='segmentation',
+            ),
+            
         ]
         return custom_urls + urls
-
-    def assign_treatment(self, request, object_id):
-        experiment = self.get_object(request, object_id)
+    
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        experiment = Experiment.objects.get(id=object_id)
+        # Call the logic from Experiment.save to preselect users
         experiment.save()
-        url = reverse('admin:experiments_experiment_change', args=[experiment.id])
-        return redirect(url)
+        extra_context['preselected_users'] = {
+            'treatment_group': list(experiment.treatment_group.values_list('id', flat=True)),
+            'control_group': list(experiment.control_group.values_list('id', flat=True)),
+        }
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+    
+    def remaining_days(self, obj):
+        current_date = timezone.now()
+        end_date = obj.start_date + timedelta(days=obj.duration_days)
+        remaining_days = (end_date - current_date).days
+        return remaining_days
 
-    def assign_treatment_button(self, obj):
-        url = reverse('admin:assign-treatment', args=[obj.id])
-        return format_html('<a class="button" href="{}">Assign</a>', url)
+    remaining_days.short_description = 'Days Left'
 
-    assign_treatment_button.short_description = 'Assign treatment(s)'
+    
+
+    def segmentation(self, request, object_id):
+        experiment = self.get_object(request, object_id)
+        form = SegmentationForm(instance=experiment)
+
+        if request.method == 'POST':
+            form = SegmentationForm(request.POST, instance=experiment)
+            if form.is_valid():
+                form.save()
+                
+                experiment.ready_for_analysis()
+                messages.success(request, 'Segmentation details updated successfully.')
+                return redirect(reverse('admin:experiments_experiment_changelist'))
+
+        return render(
+            request,
+            'admin/experiments/experiment/segmentation_form.html',
+            {'form': form, 'experiment': experiment},
+        )
+
+
+    def segmentation_button(self, obj):
+        url = reverse('admin:segmentation', args=[obj.id])
+        return format_html('<a class="button" href="{}">Segment</a>', url)
+
+    segmentation_button.short_description = 'Segmentation'
+
+    
+    def ready_for_analysis(self, obj):
+        return obj.ready_for_analysis()
+
+    def analysis_button(self, obj):
+        if obj.ready:
+            url = reverse('admin:analysis', args=[obj.id])
+            return format_html('<a class="button" href="{}">Analyse</a>', url)
+        else:
+            return format_html('<span class="button" style="color: grey; cursor: not-allowed;" title="Experiment not finished yet.">Not Ready</span>')
+
+    analysis_button.short_description = 'Analysis'
+    
+    def view_results_button(self, obj):
+        # Use 'experiments:view_results' instead of 'admin:view_results'
+        if obj.ready:
+            url = reverse('experiments:view_results', args=[obj.id])
+            return format_html('<a class="button" href="{}">View Results</a>', url)
+        else:
+            return format_html('<span class="button" style="color: grey; cursor: not-allowed;" title="Experiment not finished yet.">Not Ready</span>')
+
+    view_results_button.short_description = 'Results'
+    
+    def participants_count(self, obj):
+        # Calculate the number of participants based on treatment and control groups
+        if obj.treatment_group.count() + obj.control_group.count() == 10000:
+            return 'N/A'
+        else:
+            return obj.treatment_group.count() + obj.control_group.count()
+
+    participants_count.short_description = '# participants'
 
     list_display = (
-        'id', 'name', 'owner', 'treatment_size', 'ready', 'assign_treatment_button', 'test_button'
+        'id', 'name', 'owner','participants_count', 'treatment_size',
+        'segmentation_button', 'analysis_button', 'days_left', 'view_results_button',
     )
+
+
     list_display_links = ('id', 'name', 'owner', 'treatment_size')
 
+    # list_filter = ('owner',)  # Add more fields for filtering as needed
+    # search_fields = ('name', 'owner')  # Add more fields for searching as needed
     
 @admin.register(User)
 class UsersAdmin(admin.ModelAdmin):
-    list_display = ['customer_uuid', 'first_action_month', 'location_title',
- 'cluster_name', 'rfm',
- 'rfm_title', 'timestamp_month', 'month_of_life',
- 'rides', 'revenue_excl_vat',
- 'clv']
+    list_display = ['customer_uuid', 'first_action_month', 'location_title','cluster_name', 'rfm',
+                    'rfm_title', 'timestamp_month', 'month_of_life', 'rides', 'revenue_excl_vat',
+                    'clv']
 
 
     def get_urls(self):
         urls = super().get_urls()
-        new_urls = [path('upload-csv/', self.upload_csv),]
+        new_urls = [path('upload-csv/', self.upload_csv_admin),] 
         return new_urls + urls
     
-    def upload_csv(self, request):
+    def upload_csv_admin(self, request): 
         if request.method == "POST":
             csv_file = request.FILES["csv_upload"]
 
@@ -189,9 +232,11 @@ class UsersAdmin(admin.ModelAdmin):
                         customer_uuid=fields[0].strip(),
                         location_title=fields[2].strip(),  # Assuming 'LOCATION_TITLE' is at index 2
                         first_action_month=first_action_month,
+                        month_of_life=int(fields[7].strip()) if fields[7].strip() else 0,  # Assuming 'MONTH_OF_LIFE' is at index 7
                         timestamp_month=timestamp_month,
                         rides=rides_value,
                         revenue_excl_vat=revenue_excl_vat,
+                        clv=Decimal(fields[10].strip()) if fields[10].strip() else Decimal(0.0),  # Assuming 'CLV' is at index 10
                         cluster_name=cluster_name,
                         rfm=rfm,
                         rfm_title=rfm_title,
@@ -211,5 +256,3 @@ class UsersAdmin(admin.ModelAdmin):
         form = CsvImportForm()
         data = {"form": form}
         return render(request, "admin/csv_upload.html", data)
-    
-

@@ -33,13 +33,14 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "admin_interface",
         "colorfield",
+         'experiments',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'experiments',
+   
     'bootstrap4',
 
 ]
@@ -48,10 +49,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
 ]
 
 ROOT_URLCONF = 'pricelab.urls'
@@ -79,10 +82,23 @@ WSGI_APPLICATION = 'pricelab.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+user = os.getenv("SNOWFLAKE_USER")
+password = os.getenv("SNOWFLAKE_PASSWORD")
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'snowflake': {
+        'ENGINE': 'snowflake.sqlalchemy.snowdialect',
+        'ACCOUNT': user,
+        'USER': user,
+        'PASSWORD': password,
+        'WAREHOUSE': '<your_warehouse>',
+        'DATABASE': '<your_database>',
+        'SCHEMA': '<your_schema>',
+        'ROLE': '<your_role>',
     }
 }
 
@@ -109,6 +125,8 @@ X_FRAME_OPTIONS = "SAMEORIGIN"              # allows you to use modals insated o
 SILENCED_SYSTEM_CHECKS = ["security.W019"]  # ignores redundant warning messages
 ADMIN_INTERFACE_THEME = 'pricelab'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -125,6 +143,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')

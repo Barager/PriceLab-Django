@@ -461,6 +461,7 @@ dd {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
+    justify-content: center; /* Center the flex items horizontally */
 }
 
 .chart {
@@ -471,7 +472,7 @@ dd {
     border-radius: 8px;
     background-color: #fff;
     text-align: center;
-	margin-bottom: 20px;
+    margin: 10px auto; /* Add margin and auto for centering */
 }
 
 .chart img {
@@ -482,4 +483,16 @@ dd {
 }
 
 
+.button-save,
+.button-cancel {
+    padding: 8px 16px; /* Adjust the padding as needed */
+    margin-right: 8px; /* Optional: Add some margin between the buttons */
+}
 
+.horizontal-checkbox label {
+    display: inline-block;
+    margin-right: 10px;  /* Adjust the margin as needed */
+}
+.horizontal-checkbox input {
+    margin-right: 5px;  /* Adjust the margin as needed */
+}

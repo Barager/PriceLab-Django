@@ -1,0 +1,96 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="module">
+    <h2>Results for Experiment: {{ experiment.id }}</h2>
+
+    <!-- Add other result details here -->
+
+    <h3>Test Results:</h3>
+    <ul>
+        {% for test, result in results.items %}
+            <li>{{ test }}:
+                {% if test == 'Normality Test' %}
+                    <ul>
+                        {% for subtest, subresult in result.items %}
+                            <li>{{ subtest }}: {{ subresult }}</li>
+                        {% endfor %}
+                        <!-- Add conclusions based on p-values -->
+                    </ul>
+                {% elif test == 'Homogeneity of Variances' %}
+                    <ul>
+                        {% for subtest, subresult in result.items %}
+                            <li>{{ subtest }}: {{ subresult }}</li>
+                        {% endfor %}
+                        <!-- Add conclusions based on p-values -->
+                    </ul>
+                {% elif test == 'T-Test' or test == 'Mann-Whitney U Test' %}
+                    <ul>
+                        {% for subtest, subresult in result.items %}
+                            <li>{{ subtest }}: {{ subresult }}</li>
+                        {% endfor %}
+                        {% if not result.Result %}
+                            <li><b>Conclusion: The groups are not significantly different.</b></li>
+                        {% else %}
+                            <li><b>Conclusion: The groups are significantly different.</b></li>
+                        {% endif %}
+                    </ul>
+                {% elif test == 'Average Treatment Effect' %}
+                    <ul>
+                        {% for subtest, subresult in result.items %}
+                            {% if subtest == 'Conclusion' %}
+                                <li><b>{{ subtest }}:</b> {{ subresult }}</li>
+                            {% else %}
+                                <li><b>{{ subtest }}:</b>
+                                    {% if subtest == 'Model Details' %}
+                                        <ul>
+                                            {% for key, value in subresult.items %}
+                                                <li><b>{{ key }}:</b> {{ value }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        {{ subresult }}
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    {{ result }}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    {% if plot_path %}
+        <div style="margin-bottom: 60px; text-align: center;">
+            <img src="{% static plot_path %}" alt="Cumulative Average Minutes Driven Plot">
+        </div>
+    {% else %}
+        <p>No plot available.</p>
+    {% endif %}
+
+    {% if sum_plot %}
+        <div style="margin-bottom: 60px; text-align: center;">
+            <img src="{% static sum_plot %}" alt="Cumulative Sum Minutes Driven Plot">
+        </div>
+    {% else %}
+        <p>No plot available.</p>
+    {% endif %}
+
+    {% if covariate_plot_paths %}
+        {% for covariate_plot_path in covariate_plot_paths %}
+            <div style="margin-bottom: 20px; text-align: center; margin-left: 80px;">
+                <img src="{% static covariate_plot_path %}" alt="Covariate Representation Plot">
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No covariate representation plot available.</p>
+    {% endif %}
+
+    <a href="{% url 'admin:experiments_experiment_changelist' %}" class="button">Back to Experiment List</a>
+    <a href="{% url 'publish_results' experiment.id %}" class="button">Publish Results</a>
+
+</div>
+{% endblock %}

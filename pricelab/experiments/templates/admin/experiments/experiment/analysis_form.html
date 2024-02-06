@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="module">
+    <h2>Analysis Form</h2>
+
+    {% if previous_csv_info %}
+    <p>Current dataset: {{ previous_csv_info.original_file_name }}</p>
+    {% endif %}
+
+
+    <form method="post" action="{% if experiment.id %}{% url 'admin:analysis' experiment.id %}{% else %}{% url 'admin:experiments_experiment_changelist' %}{% endif %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        {{ csv_form.as_p }}
+        <br>
+        <input type="submit" value="Save" style="width: auto !important;">
+        <a class="button" href="{% url 'admin:experiments_experiment_changelist' %}" style="width: auto !important;">Back</a>
+    </form>
+</div>
+{% endblock %}
